@@ -1,4 +1,4 @@
-# 云贵川风味家常菜藏书阁
+# 云贵川风味家常菜 · 书单
 
 家里的书都在这里：<https://zhuangxu0414-spec.github.io/yunguichuan-library/>
 

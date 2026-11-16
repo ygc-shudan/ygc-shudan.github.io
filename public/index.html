@@ -7,8 +7,8 @@
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" content="#F4F2F8" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#17101F" media="(prefers-color-scheme: dark)">
-<meta name="description" content="家里的书都在这里。按主题逛，按位置找，看上哪本加进清单发给我们。">
-<title>云贵川风味家常菜藏书阁</title>
+<meta name="description" content="你看见你想看见的，你将它发生。">
+<title>云贵川风味家常菜 · 书单</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23241A2E'/%3E%3Crect x='6' y='9' width='4' height='17' fill='%23EF45A0'/%3E%3Crect x='11' y='6' width='4' height='20' fill='%23F18336'/%3E%3Crect x='16' y='11' width='4' height='15' fill='%233BB974'/%3E%3Crect x='21' y='7' width='4' height='19' fill='%235D98F0'/%3E%3C/svg%3E">
 <style>
   :root {
@@ -69,29 +69,22 @@
   .wrap { max-width: 1080px; margin: 0 auto; padding: 0 var(--gutter); }
 
   /* ── 开头 ── */
-  .masthead { padding-top: calc(30px + env(safe-area-inset-top)); }
-  .house {
+  .masthead { padding: calc(26px + env(safe-area-inset-top)) var(--gutter) 16px; }
+  h1 {
     font-family: var(--serif);
     font-size: 17px;
     font-weight: 700;
+    line-height: 1.5;
     letter-spacing: 0.18em;
   }
-  h1 {
-    font-family: var(--serif);
-    font-weight: 900;
-    font-size: clamp(64px, 21vw, 124px);
-    line-height: 1.02;
-    letter-spacing: 0.02em;
-    margin: 2px 0 14px -0.04em;
-  }
-  .lede { font-size: 15px; color: var(--muted); max-width: 30em; }
-  .lede b { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+  h1 .sep { margin: 0 .35em; font-weight: 400; }
+  .motto { margin-top: 6px; font-size: 13px; color: var(--muted); letter-spacing: 0.04em; }
 
   .shelf {
     display: block;
     width: 100%;
-    margin-top: 26px;
-    border-bottom: 3px solid var(--ink);
+    margin-top: 22px;
+    border-bottom: 2px solid var(--ink);
     line-height: 0;
     cursor: pointer;
     touch-action: manipulation;
@@ -99,7 +92,6 @@
   .shelf svg { display: block; width: 100%; height: 78px; }
   .shelf rect { transition: opacity .25s; }
   .shelf rect.off { opacity: .13; }
-  .shelf-note { font-size: 12px; color: var(--muted); padding: 7px 0 14px; }
 
   /* ── 搜索和筛选，滚动时吸顶 ── */
   .tools {
@@ -369,17 +361,15 @@
 <body>
 
 <header class="masthead wrap">
-  <p class="house">云贵川风味家常菜</p>
-  <h1>藏书阁</h1>
-  <p class="lede" id="lede">正在把书搬上架…</p>
-  <div class="shelf" id="shelf" role="img" aria-label="全部藏书按主题排开的色带"></div>
-  <p class="shelf-note">一道是一本书，颜色是主题。点颜色，只看那一类。</p>
+  <h1>云贵川风味家常菜<span class="sep">·</span>书单</h1>
+  <p class="motto">你看见你想看见的，你将它发生。</p>
+  <div class="shelf" id="shelf" role="img" aria-label="全部藏书按主题排开的色带，点颜色可以只看那一类"></div>
 </header>
 
 <div class="tools">
   <div class="wrap">
     <div class="search" id="searchBox">
-      <input type="search" id="q" placeholder="搜书名、作者、出版社，或简介里的词" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" aria-label="搜索藏书">
+      <input type="search" id="q" placeholder="书名、作者，或任何一个词" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" aria-label="搜索藏书">
       <button class="search-clear" id="qClear" aria-label="清空搜索">×</button>
     </div>
     <div class="chips themes" id="themeChips" role="group" aria-label="按主题筛选"></div>
@@ -389,18 +379,18 @@
 
 <main class="wrap">
   <div class="status">
-    <span id="statusText" aria-live="polite"></span>
-    <button class="ghost" id="lucky">随便翻一本</button>
+    <span id="statusText" aria-live="polite">…</span>
+    <button class="ghost" id="lucky">偶遇一本</button>
   </div>
   <ol class="books" id="books"></ol>
   <div class="empty-state" id="empty" hidden>
-    <p>没有找到这样的书。换个词试试，或者把筛选去掉。</p>
-    <button class="ghost" id="emptyReset">清除筛选</button>
+    <p>没有这样的书。</p>
+    <button class="ghost" id="emptyReset">看全部</button>
   </div>
   <p class="colophon" id="colophon"></p>
 </main>
 
-<button class="tray" id="tray"><span class="count" id="trayCount">0</span>想借的书，点开复制</button>
+<button class="tray" id="tray"><span class="count" id="trayCount">0</span>想借</button>
 
 <div class="scrim" id="bookScrim">
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="bkTitle">
@@ -414,10 +404,10 @@
       <p class="facts" id="bkFacts"></p>
       <div class="actions">
         <button class="btn solid" id="bkWish"></button>
-        <button class="btn quiet" id="bkCopy">只复制这本</button>
+        <button class="btn quiet" id="bkCopy">复制</button>
       </div>
-      <div id="bkDescWrap"><h3>这本书讲什么</h3><p class="prose" id="bkDesc"></p></div>
-      <div id="bkAuthorWrap"><h3>关于作者</h3><p class="prose" id="bkAuthor"></p></div>
+      <div id="bkDescWrap"><h3>内容</h3><p class="prose" id="bkDesc"></p></div>
+      <div id="bkAuthorWrap"><h3>作者</h3><p class="prose" id="bkAuthor"></p></div>
     </div>
   </div>
 </div>
@@ -427,8 +417,7 @@
     <div class="band" style="background: var(--ink)"></div>
     <button class="sheet-close" data-close aria-label="关闭">×</button>
     <div class="sheet-body">
-      <h2 id="wishTitle">想借的书</h2>
-      <p class="facts">复制下来发到群里，我们帮你把书找出来。</p>
+      <h2 id="wishTitle">想借</h2>
       <ul class="wish" id="wishList"></ul>
       <div class="actions">
         <button class="btn solid" id="wishCopy">复制清单</button>
@@ -565,8 +554,8 @@
 
     var filtered = !!(state.tag || state.loc || toks.length);
     $("statusText").innerHTML = filtered
-      ? "找到 <strong>" + shown.length + "</strong> 本　<button class=\"link\" id=\"reset\">清除筛选</button>"
-      : "全部 <strong>" + books.length + "</strong> 本";
+      ? "<strong>" + shown.length + "</strong> 本　<button class=\"link\" id=\"reset\">看全部</button>"
+      : "<strong>" + books.length + "</strong> 本";
     $("lucky").hidden = shown.length < 2;
     $("empty").hidden = shown.length > 0;
     $("searchBox").classList.toggle("has-text", !!state.q);
@@ -695,7 +684,7 @@
 
   function setWishBtn(b) {
     var inList = wish.indexOf(b.id) > -1;
-    $("bkWish").textContent = inList ? "已加入，点这里移出" : "加入想借的书";
+    $("bkWish").textContent = inList ? "不借了" : "想借";
     $("bkWish").classList.toggle("solid", !inList);
   }
   function fillDetails(b) {
@@ -723,7 +712,7 @@
     if (b.note) facts.push("备注：" + esc(b.note));
     $("bkFacts").innerHTML = facts.join("<br>");
     $("bkFacts").hidden = !facts.length;
-    $("bkCopy").textContent = "只复制这本";
+    $("bkCopy").textContent = "复制";
     setWishBtn(b);
     fillDetails(b);
     showScrim($("bookScrim"), push);
@@ -753,7 +742,7 @@
       var b = byId[id];
       return '<li><div><div class="t">' + esc(b.t) + '</div><div class="p">' + placeHtml(b.l) + "</div></div>" +
         '<button class="rm" data-rm="' + esc(id) + '">移出</button></li>';
-    }).join("") : '<li><div class="p">清单是空的。点开任意一本书，可以把它加进来。</div></li>';
+    }).join("") : '<li><div class="p">还没有想借的书。</div></li>';
     $("wishCopy").textContent = "复制清单";
     $("wishCopy").disabled = !wish.length;
     $("wishClear").hidden = !wish.length;
@@ -799,8 +788,8 @@
     saveWish(); renderWish(); render();
   });
   $("wishCopy").addEventListener("click", function () {
-    var text = "想借这几本：\n" + wish.map(function (id) { return line(byId[id]); }).join("\n");
-    copyText(text, this, "已复制，去群里粘贴吧");
+    var text = "想借：\n" + wish.map(function (id) { return line(byId[id]); }).join("\n");
+    copyText(text, this, "已复制");
   });
   $("wishClear").addEventListener("click", function () { wish = []; saveWish(); renderWish(); render(); });
 
@@ -826,8 +815,7 @@
     books.forEach(function (b) { b.g.forEach(function (t) { used[t] = 1; }); });
     tags = tags.filter(function (t) { return used[t]; });
 
-    $("lede").innerHTML = "家里一共 <b>" + books.length + "</b> 本书，分住在 <b>" + places.length + "</b> 个地方。想看哪本，加进清单发给我们。";
-    if (data.updated) $("colophon").textContent = "书目更新于 " + data.updated;
+    if (data.updated) $("colophon").textContent = "更新于 " + data.updated;
     buildChips($("themeChips"), tags, "tag");
     buildChips($("placeChips"), places, "loc");
     buildShelf();
@@ -851,8 +839,7 @@
     });
   }).catch(function () {
     if (!books.length) {
-      $("lede").textContent = "书目没有加载出来。检查一下网络，然后刷新这个页面。";
-      $("statusText").textContent = "";
+      $("statusText").textContent = "没有加载出来，刷新试试。";
       $("lucky").hidden = true;
     }
   });

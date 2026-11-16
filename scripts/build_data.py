@@ -7,6 +7,8 @@
   1. Excel「标签」列里手动填的（用逗号、顿号或分号隔开），填了就以它为准
   2. scripts/tags.json 里按 ISBN 记下的人工分类
   3. 都没有时，按下面 KEYWORDS 里的关键词从书名、作者、简介里猜
+
+网页上的默认顺序：scripts/featured.json 里点名的书在最前，其余按主题排。
 """
 
 import glob
@@ -21,6 +23,7 @@ from openpyxl import load_workbook
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PREFERRED_XLSX = "私家书藏-全部书籍.xlsx"
 TAGS_PATH = os.path.join(ROOT, "scripts", "tags.json")
+FEATURED_PATH = os.path.join(ROOT, "scripts", "featured.json")
 OUT_DIR = os.path.join(ROOT, "public")
 
 # 网页上主题的固定顺序；Excel 里手填的新标签会排在这些后面
@@ -178,6 +181,24 @@ def main():
         books.append(book)
         if book_desc or author_desc:
             details[book_id] = [book_desc, author_desc]
+
+    # 默认排序：scripts/featured.json 里点名的书排最前（按那里的顺序），
+    # 其余按主题顺序排，工具书和教材自然落在最后；同一主题内保持表格里的顺序。
+    featured = []
+    if os.path.exists(FEATURED_PATH):
+        with open(FEATURED_PATH, encoding="utf-8") as f:
+            featured = [str(x.get("ISBN", "")).strip() for x in json.load(f)]
+    front = {isbn: i for i, isbn in enumerate(featured)}
+
+    def rank(item):
+        n, book = item
+        if book["id"] in front:
+            return (0, front[book["id"]], n)
+        first = book["g"][0] if book["g"] else None
+        theme = TAG_ORDER.index(first) if first in TAG_ORDER else len(TAG_ORDER)
+        return (1, theme, n)
+
+    books = [b for _, b in sorted(enumerate(books), key=rank)]
 
     extra = []
     for b in books:

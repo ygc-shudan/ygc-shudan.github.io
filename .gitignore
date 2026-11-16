@@ -1,0 +1,5 @@
+public/books.json
+public/details.json
+__pycache__/
+.DS_Store
+~$*

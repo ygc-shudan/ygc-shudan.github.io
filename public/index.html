@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#F4F2F8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#17101F" media="(prefers-color-scheme: dark)">
+<meta name="description" content="家里的书都在这里。按主题逛，按位置找，看上哪本加进清单发给我们。">
+<title>云贵川风味家常菜藏书阁</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23241A2E'/%3E%3Crect x='6' y='9' width='4' height='17' fill='%23EF45A0'/%3E%3Crect x='11' y='6' width='4' height='20' fill='%23F18336'/%3E%3Crect x='16' y='11' width='4' height='15' fill='%233BB974'/%3E%3Crect x='21' y='7' width='4' height='19' fill='%235D98F0'/%3E%3C/svg%3E">
+<style>
+  :root {
+    --paper: #F4F2F8;
+    --paper-2: #ECE9F2;
+    --surface: #FCFBFE;
+    --ink: #241A2E;
+    --muted: #6B6578;
+    --line: #D9D5E0;
+    --focus: #8047E1;
+    --hot: #C4247A;
+    --ink-soft: rgba(36, 26, 46, .34);
+    --focus-soft: rgba(128, 71, 225, .22);
+
+    /* 十三个主题，色相绕一圈；最后两个是棕和黑 */
+    --c-q: #EF45A0;  --c-x: #E54B52;  --c-w: #F18336;  --c-a: #EEC743;
+    --c-t: #A2C854;  --c-b: #3BB974;  --c-m: #2CB3B3;  --c-g: #3FABDC;
+    --c-s: #3D7EDE;  --c-p: #5E4BC3;  --c-f: #A14CCE;  --c-h: #875F3E;
+    --c-l: #3F3B46;  --c-none: #B9B4C4;
+
+    --serif: "Songti SC", "STSong", "Noto Serif CJK SC", "Noto Serif SC", "Source Han Serif SC", "Source Han Serif CN", "SimSun", serif;
+    --sans: -apple-system, BlinkMacSystemFont, "PingFang SC", "HarmonyOS Sans SC", "MiSans", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
+    --gutter: 18px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #17101F;
+      --paper-2: #1F1729;
+      --surface: #231B2D;
+      --ink: #E9E6EE;
+      --muted: #A09BAC;
+      --line: #393144;
+      --focus: #B79BFF;
+      --hot: #FF7CC0;
+      --ink-soft: rgba(233, 230, 238, .34);
+      --focus-soft: rgba(183, 155, 255, .28);
+      --c-q: #FF6CB8;  --c-x: #FA6F70;  --c-w: #FFA161;  --c-a: #FEDB6D;
+      --c-t: #BDE07B;  --c-b: #67D191;  --c-m: #5FCBCB;  --c-g: #69C4F1;
+      --c-s: #5D98F0;  --c-p: #8C7FEA;  --c-f: #C583EC;  --c-h: #B08B6B;
+      --c-l: #8D8898;  --c-none: #5A5366;
+    }
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+  body {
+    font-family: var(--sans);
+    background: var(--paper);
+    color: var(--ink);
+    line-height: 1.55;
+    -webkit-tap-highlight-color: transparent;
+    padding-bottom: calc(96px + env(safe-area-inset-bottom));
+  }
+  body.locked { overflow: hidden; }
+  button, input { font: inherit; color: inherit; }
+  button { background: none; border: 0; cursor: pointer; }
+  :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 4px; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 var(--gutter); }
+
+  /* ── 开头 ── */
+  .masthead { padding-top: calc(30px + env(safe-area-inset-top)); }
+  .house {
+    font-family: var(--serif);
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+  }
+  h1 {
+    font-family: var(--serif);
+    font-weight: 900;
+    font-size: clamp(64px, 21vw, 124px);
+    line-height: 1.02;
+    letter-spacing: 0.02em;
+    margin: 2px 0 14px -0.04em;
+  }
+  .lede { font-size: 15px; color: var(--muted); max-width: 30em; }
+  .lede b { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+
+  .shelf {
+    display: block;
+    width: 100%;
+    margin-top: 26px;
+    border-bottom: 3px solid var(--ink);
+    line-height: 0;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  .shelf svg { display: block; width: 100%; height: 78px; }
+  .shelf rect { transition: opacity .25s; }
+  .shelf rect.off { opacity: .13; }
+  .shelf-note { font-size: 12px; color: var(--muted); padding: 7px 0 14px; }
+
+  /* ── 搜索和筛选，滚动时吸顶 ── */
+  .tools {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--paper);
+    border-bottom: 1px solid var(--line);
+    padding-top: calc(8px + env(safe-area-inset-top));
+  }
+  .search { position: relative; }
+  .search input {
+    width: 100%;
+    height: 44px;
+    padding: 0 44px 0 14px;
+    font-size: 16px;
+    background: var(--surface);
+    border: 1.5px solid var(--ink);
+    border-radius: 4px;
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  .search input::placeholder { color: var(--muted); }
+  .search input:focus { border-color: var(--focus); box-shadow: 0 0 0 3px var(--focus-soft); }
+  .search input::-webkit-search-cancel-button { display: none; }
+  .search-clear {
+    position: absolute; right: 2px; top: 2px;
+    width: 40px; height: 40px;
+    font-size: 20px; line-height: 1; color: var(--muted);
+    display: none;
+  }
+  .search.has-text .search-clear { display: block; }
+
+  .chips {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding: 8px var(--gutter);
+    margin: 0 calc(var(--gutter) * -1);
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .chips::-webkit-scrollbar { display: none; }
+  .chips + .chips { padding-top: 0; }
+  .chip {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 32px;
+    padding: 0 11px;
+    font-size: 13.5px;
+    white-space: nowrap;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    background: var(--surface);
+  }
+  .chip .n { font-size: 11.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .chip.empty { opacity: .42; }
+  .chip[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--paper); font-weight: 600; }
+  .chip[aria-pressed="true"] .n { color: inherit; opacity: .7; }
+  .chips.places .chip { border-radius: 4px; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; flex: none; background: var(--c-none); }
+  .swatch { width: 9px; height: 9px; border-radius: 2px; flex: none; }
+
+  /* ── 结果 ── */
+  .status {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 0 6px;
+    font-size: 13.5px;
+    color: var(--muted);
+    min-height: 52px;
+  }
+  .status strong { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .link { text-decoration: underline; text-underline-offset: 3px; color: var(--ink); padding: 6px 0; }
+  .ghost {
+    flex: none;
+    height: 34px;
+    padding: 0 12px;
+    font-size: 13.5px;
+    border: 1px solid var(--ink);
+    border-radius: 4px;
+    color: var(--ink);
+  }
+
+  .books { list-style: none; }
+  @media (min-width: 900px) {
+    .books { display: grid; grid-template-columns: 1fr 1fr; column-gap: 40px; }
+  }
+  .book { border-bottom: 1px solid var(--line); }
+  .book-btn {
+    display: grid;
+    grid-template-columns: 5px minmax(0, 1fr) auto;
+    column-gap: 13px;
+    align-items: start;
+    width: 100%;
+    padding: 13px 0;
+    text-align: left;
+  }
+  .spine { align-self: stretch; border-radius: 1px; background: var(--c-none); }
+  .book-title {
+    display: block;
+    font-family: var(--serif);
+    font-size: 17.5px;
+    font-weight: 700;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+  }
+  .book-by {
+    display: block;
+    margin-top: 2px;
+    font-size: 13px;
+    color: var(--muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .book-by .who { color: var(--ink); }
+  .book-by .who + .pub { margin-left: .7em; }
+  .book-tags { display: flex; flex-wrap: wrap; gap: 3px 12px; margin-top: 6px; font-size: 12px; color: var(--muted); }
+  .book-tags span { display: inline-flex; align-items: center; gap: 5px; }
+  .book-tags .dot { width: 7px; height: 7px; }
+  .book-tags .flag { color: var(--hot); font-weight: 600; }
+  .place {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 3px;
+    padding: 2px 7px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    border: 1px solid var(--ink-soft);
+    border-radius: 3px;
+    background: var(--surface);
+  }
+
+  .empty-state { padding: 56px 0; text-align: center; color: var(--muted); font-size: 15px; }
+  .empty-state .ghost { margin-top: 14px; }
+  .colophon { padding: 34px 0 0; font-size: 12px; color: var(--muted); }
+
+  /* ── 底部：想借的书 ── */
+  .tray {
+    position: fixed;
+    left: 50%;
+    bottom: calc(16px + env(safe-area-inset-bottom));
+    transform: translateX(-50%);
+    z-index: 20;
+    display: none;
+    align-items: center;
+    gap: 10px;
+    height: 48px;
+    padding: 0 18px 0 16px;
+    font-size: 15px;
+    font-weight: 600;
+    white-space: nowrap;
+    color: var(--paper);
+    background: var(--ink);
+    border-radius: 24px;
+    box-shadow: 0 6px 22px rgba(36, 26, 46, .28);
+  }
+  .tray.show { display: inline-flex; }
+  .tray .count {
+    min-width: 24px; height: 24px; padding: 0 7px;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 13px; font-variant-numeric: tabular-nums;
+    color: var(--ink); background: var(--c-a); border-radius: 12px;
+  }
+
+  /* ── 弹层 ── */
+  .scrim {
+    position: fixed; inset: 0; z-index: 40;
+    display: none;
+    align-items: flex-end; justify-content: center;
+    background: rgba(23, 16, 31, .5);
+  }
+  .scrim.open { display: flex; }
+  .sheet {
+    position: relative;
+    width: 100%;
+    max-width: 620px;
+    max-height: 90vh;
+    max-height: 90dvh;
+    display: flex;
+    flex-direction: column;
+    background: var(--surface);
+    border-radius: 14px 14px 0 0;
+    overflow: hidden;
+    animation: rise .22s ease-out;
+  }
+  @keyframes rise { from { transform: translateY(28px); opacity: .4; } }
+  @media (min-width: 720px) {
+    .scrim { align-items: center; padding: 24px; }
+    .sheet { border-radius: 10px; max-height: 84vh; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .sheet { animation: none; }
+    .shelf rect { transition: none; }
+  }
+  .band { height: 7px; flex: none; background: var(--c-none); }
+  .sheet-close {
+    position: absolute; top: 15px; right: 10px;
+    width: 40px; height: 40px;
+    font-size: 24px; line-height: 1; color: var(--muted);
+  }
+  .sheet-body {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    padding: 20px 22px calc(26px + env(safe-area-inset-bottom));
+  }
+  .sheet h2 {
+    font-family: var(--serif);
+    font-size: 24px;
+    font-weight: 900;
+    line-height: 1.3;
+    padding-right: 34px;
+    overflow-wrap: anywhere;
+  }
+  .sheet .by { margin-top: 6px; font-size: 14.5px; }
+  .sheet .by .pub { color: var(--muted); display: block; font-size: 13.5px; }
+  .sheet .book-tags { margin-top: 12px; font-size: 13px; }
+  .sheet .book-tags .dot { width: 9px; height: 9px; }
+
+  .where {
+    display: flex; align-items: baseline; gap: 10px;
+    margin-top: 18px; padding: 12px 14px;
+    border: 1.5px solid var(--ink); border-radius: 4px;
+  }
+  .where .lbl { font-size: 13px; color: var(--muted); flex: none; }
+  .where .val { font-family: var(--serif); font-size: 21px; font-weight: 900; display: inline-flex; align-items: center; gap: 8px; }
+  .where .val .swatch { width: 13px; height: 13px; }
+  .facts { margin-top: 10px; font-size: 13.5px; color: var(--muted); }
+  .facts .flag { color: var(--hot); font-weight: 600; }
+
+  .actions { display: flex; gap: 8px; margin-top: 16px; }
+  .btn {
+    flex: 1;
+    min-height: 46px;
+    padding: 8px 12px;
+    font-size: 15px;
+    font-weight: 600;
+    border: 1.5px solid var(--ink);
+    border-radius: 4px;
+  }
+  .btn.solid { background: var(--ink); color: var(--paper); }
+  .btn.quiet { flex: none; }
+
+  .sheet h3 { margin: 26px 0 8px; font-size: 13px; font-weight: 600; color: var(--muted); }
+  .prose { font-size: 15px; line-height: 1.8; white-space: pre-line; overflow-wrap: anywhere; max-width: 36em; }
+  .prose.wait { color: var(--muted); }
+
+  .wish { list-style: none; margin-top: 14px; }
+  .wish li {
+    display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px;
+    padding: 11px 0; border-bottom: 1px solid var(--line);
+  }
+  .wish .t { font-family: var(--serif); font-weight: 700; font-size: 16px; line-height: 1.35; }
+  .wish .p { margin-top: 3px; font-size: 12.5px; color: var(--muted); }
+  .wish .rm { font-size: 13px; color: var(--muted); text-decoration: underline; text-underline-offset: 3px; padding: 8px 0 8px 8px; }
+</style>
+</head>
+<body>
+
+<header class="masthead wrap">
+  <p class="house">云贵川风味家常菜</p>
+  <h1>藏书阁</h1>
+  <p class="lede" id="lede">正在把书搬上架…</p>
+  <div class="shelf" id="shelf" role="img" aria-label="全部藏书按主题排开的色带"></div>
+  <p class="shelf-note">一道就是一本书，颜色是它的主题。点哪种颜色，就只看哪一类。</p>
+</header>
+
+<div class="tools">
+  <div class="wrap">
+    <div class="search" id="searchBox">
+      <input type="search" id="q" placeholder="搜书名、作者、出版社，或简介里的词" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" aria-label="搜索藏书">
+      <button class="search-clear" id="qClear" aria-label="清空搜索">×</button>
+    </div>
+    <div class="chips themes" id="themeChips" role="group" aria-label="按主题筛选"></div>
+    <div class="chips places" id="placeChips" role="group" aria-label="按存放位置筛选"></div>
+  </div>
+</div>
+
+<main class="wrap">
+  <div class="status">
+    <span id="statusText" aria-live="polite"></span>
+    <button class="ghost" id="lucky">随便翻一本</button>
+  </div>
+  <ol class="books" id="books"></ol>
+  <div class="empty-state" id="empty" hidden>
+    <p>没有找到这样的书。换个词试试，或者把筛选去掉。</p>
+    <button class="ghost" id="emptyReset">清除筛选</button>
+  </div>
+  <p class="colophon" id="colophon"></p>
+</main>
+
+<button class="tray" id="tray"><span class="count" id="trayCount">0</span>想借的书，点开复制</button>
+
+<div class="scrim" id="bookScrim">
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="bkTitle">
+    <div class="band" id="bkBand"></div>
+    <button class="sheet-close" data-close aria-label="关闭">×</button>
+    <div class="sheet-body">
+      <h2 id="bkTitle"></h2>
+      <p class="by" id="bkBy"></p>
+      <div class="book-tags" id="bkTags"></div>
+      <div class="where"><span class="lbl">放在</span><span class="val" id="bkWhere"></span></div>
+      <p class="facts" id="bkFacts"></p>
+      <div class="actions">
+        <button class="btn solid" id="bkWish"></button>
+        <button class="btn quiet" id="bkCopy">只复制这本</button>
+      </div>
+      <div id="bkDescWrap"><h3>这本书讲什么</h3><p class="prose" id="bkDesc"></p></div>
+      <div id="bkAuthorWrap"><h3>关于作者</h3><p class="prose" id="bkAuthor"></p></div>
+    </div>
+  </div>
+</div>
+
+<div class="scrim" id="wishScrim">
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="wishTitle">
+    <div class="band" style="background: var(--ink)"></div>
+    <button class="sheet-close" data-close aria-label="关闭">×</button>
+    <div class="sheet-body">
+      <h2 id="wishTitle">想借的书</h2>
+      <p class="facts">复制下来发到群里，我们帮你把书找出来。</p>
+      <ul class="wish" id="wishList"></ul>
+      <div class="actions">
+        <button class="btn solid" id="wishCopy">复制清单</button>
+        <button class="btn quiet" id="wishClear">清空</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // 主题 → 颜色代号（对应上面 CSS 里的 --c-*）
+  var KEY = {
+    "酷儿": "q", "女性主义与性别": "f", "性与亲密": "x", "社会学与人类学": "s", "哲学与思想": "p",
+    "历史与政治": "h", "劳动与经济": "l", "公益与行动": "g", "文学": "w", "漫画与艺术": "a",
+    "心理与灵性": "m", "身体与健康": "b", "生活与工具书": "t"
+  };
+  // 色带上的排列顺序：沿色相走一圈，最后是棕和黑
+  var SPECTRUM = ["酷儿", "性与亲密", "文学", "漫画与艺术", "生活与工具书", "身体与健康", "心理与灵性",
+    "公益与行动", "社会学与人类学", "哲学与思想", "女性主义与性别", "历史与政治", "劳动与经济"];
+  var BOX = { "绿": "#45B164", "蓝": "#2F8ADC", "橙": "#F48D2F", "黄": "#F0CF4C", "红": "#E54B52", "紫": "#A14CCE", "粉": "#EF45A0", "黑": "#3F3B46", "白": "#F2F0F5", "灰": "#9A95A6" };
+
+  // 繁体 → 简体，让「鳄鱼」能搜到《鱷魚手記》。每两个字一对。
+  var T2S = "萬万 與与 專专 業业 東东 絲丝 兩两 嚴严 喪丧 個个 豐丰 臨临 為为 麗丽 舉举 麼么 義义 烏乌 樂乐 喬乔 習习 鄉乡 書书 買买 亂乱 爭争 於于 虧亏 雲云 亞亚 產产 親亲 億亿 僅仅 從从 倉仓 們们 價价 眾众 優优 會会 傷伤 倫伦 偽伪 體体 餘余 傳传 傾倾 側侧 僑侨 儀仪 俠侠 債债 兒儿 黨党 蘭兰 關关 興兴 養养 獸兽 內内 岡冈 冊册 寫写 軍军 農农 馮冯 沖冲 決决 況况 凍冻 淨净 涼凉 減减 鳳凤 幾几 擊击 劃划 則则 剛刚 創创 劇剧 劉刘 動动 務务 勝胜 勞劳 勢势 勳勋 區区 醫医 華华 協协 單单 賣卖 盧卢 衛卫 卻却 廠厂 歷历 厲厉 壓压 厭厌 縣县 參参 雙双 發发 變变 敘叙 葉叶 號号 嘆叹 嚇吓 嗎吗 員员 響响 啟启 問问 啞哑 國国 圖图 圓圆 聖圣 場场 壞坏 塊块 堅坚 壇坛 壯壮 聲声 處处 備备 復复 夠够 頭头 夾夹 奪夺 奮奋 獎奖 婦妇 媽妈 嬰婴 學学 孫孙 寧宁 寶宝 實实 寵宠 審审 憲宪 宮宫 寬宽 賓宾 對对 尋寻 導导 壽寿 將将 爾尔 塵尘 嘗尝 層层 屬属 歲岁 島岛 嶺岭 峽峡 嶼屿 幣币 帥帅 師师 帳帐 帶带 幫帮 庫库 應应 廟庙 廣广 慶庆 張张 彈弹 強强 歸归 當当 錄录 彥彦 徹彻 徑径 憶忆 憂忧 懷怀 態态 慣惯 總总 戀恋 恥耻 懇恳 惡恶 惱恼 悅悦 懸悬 驚惊 懼惧 慘惨 憤愤 憐怜 戲戏 戰战 戶户 執执 擴扩 掃扫 揚扬 擾扰 撫抚 護护 報报 擔担 擁拥 擇择 掛挂 換换 據据 攝摄 數数 敵敌 齋斋 斷断 無无 舊旧 時时 曠旷 顯显 晉晋 曉晓 曆历 術术 機机 殺杀 雜杂 權权 條条 來来 楊杨 極极 構构 槍枪 樓楼 標标 樣样 樹树 橋桥 檢检 櫃柜 歡欢 歐欧 殘残 毀毁 氣气 漢汉 湯汤 溝沟 沒没 瀉泻 淚泪 澤泽 潔洁 灣湾 測测 濟济 渾浑 濃浓 濤涛 潤润 漲涨 漁渔 滿满 滅灭 靈灵 災灾 燈灯 點点 煉炼 煩烦 熱热 愛爱 爺爷 牆墙 狀状 猶犹 獄狱 獨独 獲获 獵猎 瑪玛 環环 現现 瑩莹 電电 畫画 暢畅 療疗 瘋疯 盜盗 盡尽 監监 盤盘 礎础 確确 禮礼 禪禅 離离 種种 積积 稱称 穩稳 窮穷 竊窃 競竞 筆笔 築筑 簡简 籃篮 類类 糧粮 紀纪 約约 級级 紅红 純纯 紙纸 紋纹 細细 織织 終终 結结 給给 絕绝 統统 經经 綠绿 維维 網网 緊紧 線线 編编 緣缘 縛缚 繩绳 繪绘 續续 羅罗 罰罚 罷罢 聯联 職职 腦脑 臉脸 藝艺 節节 蘇苏 萊莱 藍蓝 蕭萧 薩萨 藥药 虛虚 蟲虫 補补 裝装 裡里 裏里 見见 觀观 規规 視视 覺觉 計计 訂订 討讨 記记 訊讯 訓训 許许 評评 詞词 試试 詩诗 話话 該该 詳详 誠诚 語语 誤误 說说 請请 論论 諮咨 謝谢 識识 證证 議议 讀读 譯译 讓让 豔艳 貝贝 負负 財财 責责 賢贤 貴贵 費费 資资 賽赛 贊赞 趙赵 趕赶 躍跃 車车 軌轨 軟软 轉转 輕轻 載载 輯辑 輪轮 辯辩 邊边 達达 遷迁 過过 運运 還还 這这 進进 遠远 違违 連连 遲迟 選选 遺遗 鄭郑 醜丑 釋释 鐘钟 鋼钢 錢钱 鏡镜 長长 門门 閃闪 閉闭 開开 間间 閱阅 闇暗 隊队 陽阳 陰阴 階阶 際际 陳陈 陸陆 險险 隨随 隱隐 難难 霧雾 靜静 韓韩 韻韵 頁页 頂顶 項项 順顺 須须 顧顾 顏颜 願愿 風风 飛飞 飯饭 飲饮 館馆 馬马 馴驯 驗验 鬥斗 鬱郁 魚鱼 鱷鳄 鳥鸟 鵬鹏 麥麦 黃黄 齡龄 龍龙 龜龟 臺台 偉伟 穎颖 紹绍 葦苇 訪访 詢询 夢梦 後后 幹干 髮发 麵面 聽听 澀涩 園园 團团 吳吴 別别 灑洒 櫻樱 貓猫 遊游 襲袭 嚮向 歎叹 眞真 爲为 衆众 啓启 敎教 戀恋 寫写 鬆松 譜谱 輝辉 鄰邻 齊齐 婭娅 莖茎 濱滨 幀帧 縱纵 攜携 賴赖 尷尴 幟帜 鑰钥 匯汇 滙汇 彙汇 鑑鉴 鑒鉴 獻献 衝冲 徵征 緻致 禦御 傑杰 餵喂 麽么 妳你 祂他 牠它 練练 認认 訓训 鍊链 鏈链 讚赞 嶄崭 壹一 貳二 參叁 畢毕 獄狱 馬马 駕驾 騎骑 驅驱 騙骗 鬧闹 鮮鲜 鯨鲸 鴉鸦 鴨鸭 鷹鹰 麗丽 齒齿 鹽盐 礦矿 禍祸 穀谷 窩窝 範范 緒绪 繼继 纏缠 羈羁 翹翘 聰聪 脅胁 腳脚 膚肤 蔣蒋 蔥葱 薦荐 蘿萝 襯衬 訴诉 診诊 詭诡 誇夸 誌志 謀谋 謊谎 謎谜 譽誉 讚赞 貧贫 貨货 貪贪 賊贼 賞赏 贈赠 贏赢 趨趋 軀躯 輸输 辭辞 遞递 鄧邓 釣钓 鈴铃 銀银 銳锐 鋪铺 錯错 鍵键 鎖锁 鐵铁 閒闲 闊阔 陣阵 隸隶 雖虽 雞鸡 韋韦 頌颂 預预 領领 頻频 題题 額额 饑饥 餓饿 驕骄 驟骤 體体 鬍胡 鬚须 魯鲁 鷗鸥 麼么 黴霉 齣出";
+  var t2s = {};
+  T2S.split(" ").forEach(function (p) { if (p.length === 2) t2s[p[0]] = p[1]; });
+  function norm(s) {
+    s = String(s || "").toLowerCase();
+    var out = "";
+    for (var i = 0; i < s.length; i++) { var c = s[i]; out += t2s[c] || c; }
+    return out;
+  }
+
+  var $ = function (id) { return document.getElementById(id); };
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+  function colorOf(tag) { return "var(--c-" + (KEY[tag] || "none") + ")"; }
+  function stripes(tags, dir) {
+    if (!tags.length) return "var(--c-none)";
+    if (tags.length === 1) return colorOf(tags[0]);
+    var step = 100 / tags.length, stops = [];
+    tags.forEach(function (t, i) {
+      stops.push(colorOf(t) + " " + (i * step) + "%", colorOf(t) + " " + ((i + 1) * step) + "%");
+    });
+    return "linear-gradient(" + dir + ", " + stops.join(", ") + ")";
+  }
+  function boxColor(place) {
+    if (!/箱|盒|筐/.test(place)) return "";
+    for (var k in BOX) if (place.indexOf(k) > -1) return BOX[k];
+    return "";
+  }
+  function placeHtml(place) {
+    var c = boxColor(place);
+    return (c ? '<span class="swatch" style="background:' + c + '"></span>' : "") + esc(place);
+  }
+  function tagsHtml(b, extra) {
+    var h = b.g.map(function (t) {
+      return '<span><i class="dot" style="background:' + colorOf(t) + '"></i>' + esc(t) + "</span>";
+    }).join("");
+    return h + (extra || "");
+  }
+  function hash01(str) {
+    var h = 2166136261;
+    for (var i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
+    return ((h >>> 0) % 1000) / 1000;
+  }
+
+  var books = [], byId = {}, tags = [], places = [], details = null;
+  var state = { q: "", tag: "", loc: "", book: "" };
+  var shown = [];
+  var shelfOrder = [], shelfRects = [];
+  var wish = [];
+  try { wish = JSON.parse(localStorage.getItem("wish") || "[]") || []; } catch (e) { wish = []; }
+  function saveWish() { try { localStorage.setItem("wish", JSON.stringify(wish)); } catch (e) {} }
+
+  // ── 地址栏：筛选状态写进 # 后面，方便把某个书单或某本书的链接发给朋友 ──
+  function readHash() {
+    var s = { q: "", tag: "", loc: "", book: "" };
+    location.hash.replace(/^#/, "").split("&").forEach(function (kv) {
+      var i = kv.indexOf("=");
+      if (i < 1) return;
+      var k = kv.slice(0, i), v = "";
+      try { v = decodeURIComponent(kv.slice(i + 1)); } catch (e) {}
+      if (k === "q") s.q = v; else if (k === "tag") s.tag = v; else if (k === "loc") s.loc = v; else if (k === "b") s.book = v;
+    });
+    return s;
+  }
+  function makeHash(withBook) {
+    var p = [];
+    if (state.tag) p.push("tag=" + encodeURIComponent(state.tag));
+    if (state.loc) p.push("loc=" + encodeURIComponent(state.loc));
+    if (state.q.trim()) p.push("q=" + encodeURIComponent(state.q.trim()));
+    if (withBook && state.book) p.push("b=" + encodeURIComponent(state.book));
+    return p.length ? "#" + p.join("&") : location.pathname + location.search;
+  }
+  function syncUrl() { try { history.replaceState(history.state, "", makeHash(true)); } catch (e) {} }
+
+  // ── 筛选 ──
+  function tokens() { return norm(state.q).split(/\s+/).filter(Boolean); }
+  function matchText(b, toks) {
+    if (!toks.length) return 1;
+    var inMeta = true, inAll = true;
+    for (var i = 0; i < toks.length; i++) {
+      var m = b._m.indexOf(toks[i]) > -1;
+      if (!m) { inMeta = false; if (!(b._d && b._d.indexOf(toks[i]) > -1)) { inAll = false; break; } }
+    }
+    return inMeta ? 1 : inAll ? 2 : 0;   // 1 = 书名作者里有；2 = 只在简介里提到
+  }
+
+  function render() {
+    var toks = tokens();
+    var tagCount = {}, locCount = {}, allTag = 0, allLoc = 0;
+    var top = [], rest = [];
+    books.forEach(function (b) {
+      var m = matchText(b, toks);
+      b._hit = 0;
+      if (!m) return;
+      var okTag = !state.tag || b.g.indexOf(state.tag) > -1;
+      var okLoc = !state.loc || b.l === state.loc;
+      if (okLoc) { allTag++; b.g.forEach(function (t) { tagCount[t] = (tagCount[t] || 0) + 1; }); }
+      if (okTag) { allLoc++; locCount[b.l] = (locCount[b.l] || 0) + 1; }
+      if (okTag && okLoc) { b._hit = m; (m === 1 ? top : rest).push(b); }
+    });
+    shown = top.concat(rest);
+
+    updateChips($("themeChips"), state.tag, tagCount, allTag);
+    updateChips($("placeChips"), state.loc, locCount, allLoc);
+    shelfRects.forEach(function (r, i) { r.classList.toggle("off", !shelfOrder[i]._hit); });
+
+    var filtered = !!(state.tag || state.loc || toks.length);
+    $("statusText").innerHTML = filtered
+      ? "找到 <strong>" + shown.length + "</strong> 本　<button class=\"link\" id=\"reset\">清除筛选</button>"
+      : "全部 <strong>" + books.length + "</strong> 本";
+    $("lucky").hidden = shown.length < 2;
+    $("empty").hidden = shown.length > 0;
+    $("searchBox").classList.toggle("has-text", !!state.q);
+
+    $("books").innerHTML = shown.map(function (b) {
+      var by = (b.a ? '<span class="who">' + esc(b.a) + "</span>" : "") + (b.p ? '<span class="pub">' + esc(b.p) + "</span>" : "");
+      var extra = (b.lent ? '<span class="flag">借给了' + esc(b.lent) + "</span>" : "") +
+        (b._hit === 2 ? "<span>简介里提到</span>" : "") +
+        (wish.indexOf(b.id) > -1 ? '<span class="flag">已在清单</span>' : "");
+      return '<li class="book"><button class="book-btn" data-id="' + esc(b.id) + '">' +
+        '<span class="spine" style="background:' + stripes(b.g, "to bottom") + '"></span>' +
+        '<span><span class="book-title">' + esc(b.t) + "</span>" +
+        (by ? '<span class="book-by">' + by + "</span>" : "") +
+        '<span class="book-tags">' + tagsHtml(b, extra) + "</span></span>" +
+        '<span class="place">' + placeHtml(b.l) + "</span></button></li>";
+    }).join("");
+
+    $("trayCount").textContent = wish.length;
+    $("tray").classList.toggle("show", wish.length > 0);
+  }
+
+  function buildChips(el, items, kind) {
+    var html = '<button class="chip" data-v="" aria-pressed="true">' + (kind === "tag" ? "全部主题" : "全部位置") + ' <span class="n"></span></button>';
+    html += items.map(function (v) {
+      var mark = kind === "tag"
+        ? '<i class="dot" style="background:' + colorOf(v) + '"></i>'
+        : (boxColor(v) ? '<span class="swatch" style="background:' + boxColor(v) + '"></span>' : "");
+      return '<button class="chip" data-v="' + esc(v) + '" aria-pressed="false">' + mark + esc(v) + ' <span class="n"></span></button>';
+    }).join("");
+    el.innerHTML = html;
+    el.addEventListener("click", function (e) {
+      var chip = e.target.closest(".chip");
+      if (!chip) return;
+      var v = chip.getAttribute("data-v");
+      if (kind === "tag") state.tag = state.tag === v ? "" : v; else state.loc = state.loc === v ? "" : v;
+      render(); syncUrl(); backToTop();
+    });
+  }
+  // 往下翻了很远再换筛选时，回到结果的第一本
+  function backToTop() {
+    var top = document.querySelector(".tools").offsetTop;
+    if (window.scrollY > top) window.scrollTo(0, top);
+  }
+  function updateChips(el, active, counts, all) {
+    Array.prototype.forEach.call(el.children, function (chip) {
+      var v = chip.getAttribute("data-v");
+      var n = v ? (counts[v] || 0) : all;
+      chip.querySelector(".n").textContent = n;
+      chip.setAttribute("aria-pressed", String(v === active));
+      chip.classList.toggle("empty", n === 0 && v !== active);
+    });
+  }
+  function revealChip(el, v) {
+    Array.prototype.forEach.call(el.children, function (chip) {
+      if (chip.getAttribute("data-v") === v && chip.scrollIntoView) {
+        try { chip.scrollIntoView({ block: "nearest", inline: "center" }); } catch (e) {}
+      }
+    });
+  }
+
+  // ── 色带：每本书一道，按主题排开 ──
+  function buildShelf() {
+    var rank = {};
+    SPECTRUM.forEach(function (t, i) { rank[t] = i; });
+    function r(b) { var t = b.g[0]; return t in rank ? rank[t] : t ? SPECTRUM.length : SPECTRUM.length + 1; }
+    shelfOrder = books.slice().sort(function (a, b) { return r(a) - r(b) || a._i - b._i; });
+    var n = shelfOrder.length;
+    var svg = '<svg viewBox="0 0 ' + n + ' 100" preserveAspectRatio="none" aria-hidden="true">';
+    shelfOrder.forEach(function (b, i) {
+      var h = 44 + Math.round(56 * hash01(b.id));
+      svg += '<rect x="' + i + '" y="' + (100 - h) + '" width="1.04" height="' + h + '" fill="' + colorOf(b.g[0]) + '"/>';
+    });
+    $("shelf").innerHTML = svg + "</svg>";
+    shelfRects = Array.prototype.slice.call($("shelf").querySelectorAll("rect"));
+    $("shelf").addEventListener("click", function (e) {
+      var box = this.getBoundingClientRect();
+      var i = Math.min(n - 1, Math.max(0, Math.floor((e.clientX - box.left) / box.width * n)));
+      var t = shelfOrder[i].g[0];
+      if (!t) return;
+      state.tag = state.tag === t ? "" : t;
+      render(); syncUrl();
+      revealChip($("themeChips"), state.tag);
+    });
+  }
+
+  // ── 弹层 ──
+  var openScrim = null, lastFocus = null, pushed = false;
+  function showScrim(el, push) {
+    if (openScrim) hideScrim(false);
+    lastFocus = document.activeElement;
+    openScrim = el;
+    el.classList.add("open");
+    document.body.classList.add("locked");
+    el.querySelector(".sheet-body").scrollTop = 0;
+    el.querySelector("[data-close]").focus({ preventScroll: true });
+    pushed = false;
+    if (push) { try { history.pushState({ sheet: 1 }, "", makeHash(true)); pushed = true; } catch (e) {} }
+  }
+  function hideScrim(viaHistory) {
+    if (!openScrim) return;
+    openScrim.classList.remove("open");
+    openScrim = null;
+    state.book = "";
+    document.body.classList.remove("locked");
+    if (lastFocus && lastFocus.focus && document.contains(lastFocus)) { try { lastFocus.focus({ preventScroll: true }); } catch (e) {} }
+    if (!viaHistory) syncUrl();
+  }
+  function closeSheet() {
+    if (!openScrim) return;
+    if (pushed) { pushed = false; history.back(); } else hideScrim(false);
+  }
+  window.addEventListener("popstate", function () {
+    if (openScrim) { pushed = false; hideScrim(true); }
+    var s = readHash();
+    state.q = s.q; state.tag = s.tag; state.loc = s.loc;
+    $("q").value = state.q;
+    render();
+    if (s.book && byId[s.book]) openBook(s.book, false);
+  });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeSheet(); });
+  ["bookScrim", "wishScrim"].forEach(function (id) {
+    $(id).addEventListener("click", function (e) {
+      if (e.target === this || e.target.closest("[data-close]")) closeSheet();
+    });
+  });
+
+  function setWishBtn(b) {
+    var inList = wish.indexOf(b.id) > -1;
+    $("bkWish").textContent = inList ? "已加入，点这里移出" : "加入想借的书";
+    $("bkWish").classList.toggle("solid", !inList);
+  }
+  function fillDetails(b) {
+    var d = details && details[b.id];
+    var waiting = !details;
+    $("bkDescWrap").hidden = !waiting && !(d && d[0]);
+    $("bkAuthorWrap").hidden = !(d && d[1]);
+    $("bkDesc").textContent = waiting ? "简介加载中…" : (d && d[0]) || "";
+    $("bkDesc").classList.toggle("wait", waiting);
+    $("bkAuthor").textContent = (d && d[1]) || "";
+  }
+  function openBook(id, push) {
+    var b = byId[id];
+    if (!b) return;
+    state.book = id;
+    $("bkBand").style.background = stripes(b.g, "to right");
+    $("bkTitle").textContent = b.t;
+    $("bkBy").innerHTML = (b.a ? esc(b.a) : "") + (b.p ? '<span class="pub">' + esc(b.p) + "</span>" : "");
+    $("bkBy").hidden = !(b.a || b.p);
+    $("bkTags").innerHTML = tagsHtml(b);
+    $("bkWhere").innerHTML = placeHtml(b.l);
+    var facts = [];
+    if (b.lent) facts.push('<span class="flag">现在借给了' + esc(b.lent) + "</span>");
+    if (b.status) facts.push("阅读状态：" + esc(b.status));
+    if (b.note) facts.push("备注：" + esc(b.note));
+    $("bkFacts").innerHTML = facts.join("<br>");
+    $("bkFacts").hidden = !facts.length;
+    $("bkCopy").textContent = "只复制这本";
+    setWishBtn(b);
+    fillDetails(b);
+    showScrim($("bookScrim"), push);
+    if (!push) syncUrl();
+  }
+  function line(b) { return "《" + b.t + "》（" + b.l + "）"; }
+
+  function copyText(text, btn, done) {
+    function ok() { btn.textContent = done; }
+    function fallback() {
+      var ta = document.createElement("textarea");
+      ta.value = text; ta.setAttribute("readonly", "");
+      ta.style.cssText = "position:fixed;top:0;left:0;opacity:0;font-size:16px";
+      document.body.appendChild(ta); ta.focus(); ta.select(); ta.setSelectionRange(0, text.length);
+      var good = false;
+      try { good = document.execCommand("copy"); } catch (e) {}
+      document.body.removeChild(ta);
+      if (good) ok(); else window.prompt("长按下面的文字复制：", text);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(ok, fallback);
+    else fallback();
+  }
+
+  function renderWish() {
+    wish = wish.filter(function (id) { return byId[id]; });
+    $("wishList").innerHTML = wish.length ? wish.map(function (id) {
+      var b = byId[id];
+      return '<li><div><div class="t">' + esc(b.t) + '</div><div class="p">' + placeHtml(b.l) + "</div></div>" +
+        '<button class="rm" data-rm="' + esc(id) + '">移出</button></li>';
+    }).join("") : '<li><div class="p">清单是空的。点开任意一本书，可以把它加进来。</div></li>';
+    $("wishCopy").textContent = "复制清单";
+    $("wishCopy").disabled = !wish.length;
+    $("wishClear").hidden = !wish.length;
+  }
+
+  // ── 事件 ──
+  $("books").addEventListener("click", function (e) {
+    var btn = e.target.closest(".book-btn");
+    if (btn) openBook(btn.getAttribute("data-id"), true);
+  });
+  var typing;
+  $("q").addEventListener("input", function () {
+    state.q = this.value;
+    render();
+    clearTimeout(typing); typing = setTimeout(syncUrl, 400);
+  });
+  $("q").addEventListener("keydown", function (e) { if (e.key === "Enter") this.blur(); });
+  $("qClear").addEventListener("click", function () { state.q = ""; $("q").value = ""; render(); syncUrl(); $("q").focus(); });
+  function resetAll() {
+    state.q = ""; state.tag = ""; state.loc = ""; $("q").value = "";
+    render(); syncUrl(); backToTop();
+    $("themeChips").scrollLeft = 0; $("placeChips").scrollLeft = 0;
+  }
+  $("statusText").addEventListener("click", function (e) { if (e.target.id === "reset") resetAll(); });
+  $("emptyReset").addEventListener("click", resetAll);
+  $("lucky").addEventListener("click", function () {
+    if (shown.length) openBook(shown[Math.floor(Math.random() * shown.length)].id, true);
+  });
+  $("bkWish").addEventListener("click", function () {
+    var b = byId[state.book]; if (!b) return;
+    var i = wish.indexOf(b.id);
+    if (i > -1) wish.splice(i, 1); else wish.push(b.id);
+    saveWish(); setWishBtn(b); render();
+  });
+  $("bkCopy").addEventListener("click", function () {
+    var b = byId[state.book]; if (b) copyText(line(b), this, "已复制");
+  });
+  $("tray").addEventListener("click", function () { renderWish(); showScrim($("wishScrim"), true); });
+  $("wishList").addEventListener("click", function (e) {
+    var id = e.target.getAttribute && e.target.getAttribute("data-rm");
+    if (!id) return;
+    wish = wish.filter(function (x) { return x !== id; });
+    saveWish(); renderWish(); render();
+  });
+  $("wishCopy").addEventListener("click", function () {
+    var text = "想借这几本：\n" + wish.map(function (id) { return line(byId[id]); }).join("\n");
+    copyText(text, this, "已复制，去群里粘贴吧");
+  });
+  $("wishClear").addEventListener("click", function () { wish = []; saveWish(); renderWish(); render(); });
+
+  // ── 加载 ──
+  function getJson(url) {
+    return fetch(url, { cache: "no-cache" }).then(function (r) {
+      if (!r.ok) throw new Error(r.status);
+      return r.json();
+    });
+  }
+  getJson("books.json").then(function (data) {
+    books = data.books;
+    tags = data.tags || [];
+    var placeCount = {};
+    books.forEach(function (b, i) {
+      b._i = i; b.g = b.g || [];
+      byId[b.id] = b;
+      b._m = norm([b.t, b.a, b.p, b.l, b.g.join(" "), b.lent, b.note].join(" "));
+      placeCount[b.l] = (placeCount[b.l] || 0) + 1;
+    });
+    places = Object.keys(placeCount).sort(function (a, b) { return placeCount[b] - placeCount[a]; });
+    var used = {};
+    books.forEach(function (b) { b.g.forEach(function (t) { used[t] = 1; }); });
+    tags = tags.filter(function (t) { return used[t]; });
+
+    $("lede").innerHTML = "家里一共 <b>" + books.length + "</b> 本书，分住在 <b>" + places.length + "</b> 个地方。想看哪本，加进清单发给我们。";
+    if (data.updated) $("colophon").textContent = "书目更新于 " + data.updated;
+    buildChips($("themeChips"), tags, "tag");
+    buildChips($("placeChips"), places, "loc");
+    buildShelf();
+
+    var s = readHash();
+    state.q = s.q; state.tag = tags.indexOf(s.tag) > -1 ? s.tag : ""; state.loc = placeCount[s.loc] ? s.loc : "";
+    $("q").value = state.q;
+    render();
+    revealChip($("themeChips"), state.tag); revealChip($("placeChips"), state.loc);
+    if (s.book && byId[s.book]) openBook(s.book, false);
+
+    // 简介比较大，等列表出来以后再悄悄加载
+    return getJson("details.json").then(function (d) {
+      details = d;
+      books.forEach(function (b) { if (d[b.id]) b._d = norm(d[b.id][0]); });
+      if (state.q.trim()) render();
+      if (state.book && byId[state.book]) fillDetails(byId[state.book]);
+    }, function () {
+      details = {};
+      if (state.book && byId[state.book]) fillDetails(byId[state.book]);
+    });
+  }).catch(function () {
+    if (!books.length) {
+      $("lede").textContent = "书目没有加载出来。检查一下网络，然后刷新这个页面。";
+      $("statusText").textContent = "";
+      $("lucky").hidden = true;
+    }
+  });
+})();
+</script>
+</body>
+</html>

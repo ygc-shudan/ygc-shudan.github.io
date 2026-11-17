@@ -156,10 +156,6 @@
   .chip[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--paper); font-weight: 600; }
   .chip[aria-pressed="true"] .n { color: inherit; opacity: .7; }
   .chips.places .chip { border-radius: 4px; }
-  /* 民间出版物：和主题并列、但可以与主题叠加的开关 */
-  .chip.kind { border-style: dashed; border-color: var(--muted); }
-  .chip.kind[aria-pressed="true"] { border-style: solid; }
-  .chips .rule { flex: none; width: 1px; align-self: stretch; margin: 6px 4px; background: var(--line); }
   .dot { width: 9px; height: 9px; border-radius: 50%; flex: none; background: var(--c-none); }
   .swatch { width: 9px; height: 9px; border-radius: 2px; flex: none; }
 
@@ -174,6 +170,20 @@
     color: var(--muted);
     min-height: 52px;
   }
+  .tabs { display: flex; gap: 16px; min-width: 0; }
+  .tabs button {
+    flex: none;
+    padding: 8px 0 6px;
+    font-size: 14px;
+    color: var(--muted);
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+  }
+  .tabs button .n { font-size: 12px; font-variant-numeric: tabular-nums; }
+  .tabs button[aria-selected="true"] { color: var(--ink); font-weight: 600; border-bottom-color: var(--ink); }
+  .status.has-tabs #statusText { display: none; }
+  .subnote { font-size: 13px; color: var(--muted); padding: 0 0 4px; }
+  .subnote strong { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
   .status strong { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
   .link { text-decoration: underline; text-underline-offset: 3px; color: var(--ink); padding: 6px 0; }
   .ghost {
@@ -386,9 +396,15 @@
 
 <main class="wrap">
   <div class="status">
+    <div class="tabs" id="kindTabs" role="tablist" aria-label="出版类型" hidden>
+      <button role="tab" data-k="">全部 <span class="n"></span></button>
+      <button role="tab" data-k="0">正式出版 <span class="n"></span></button>
+      <button role="tab" data-k="1">民间出版 <span class="n"></span></button>
+    </div>
     <span id="statusText" aria-live="polite">…</span>
     <button class="ghost" id="lucky">偶遇一本</button>
   </div>
+  <p class="subnote" id="subnote" hidden></p>
   <ol class="books" id="books"></ol>
   <div class="empty-state" id="empty" hidden>
     <p>没有这样的书。</p>
@@ -519,13 +535,13 @@
       if (i < 1) return;
       var k = kv.slice(0, i), v = "";
       try { v = decodeURIComponent(kv.slice(i + 1)); } catch (e) {}
-      if (k === "q") s.q = v; else if (k === "tag") s.tag = v; else if (k === "loc") s.loc = v; else if (k === "kind") s.kind = v === "1" ? "1" : ""; else if (k === "b") s.book = v;
+      if (k === "q") s.q = v; else if (k === "tag") s.tag = v; else if (k === "loc") s.loc = v; else if (k === "kind") s.kind = v === "1" || v === "0" ? v : ""; else if (k === "b") s.book = v;
     });
     return s;
   }
   function makeHash(withBook) {
     var p = [];
-    if (state.kind) p.push("kind=1");
+    if (state.kind) p.push("kind=" + state.kind);
     if (state.tag) p.push("tag=" + encodeURIComponent(state.tag));
     if (state.loc) p.push("loc=" + encodeURIComponent(state.loc));
     if (state.q.trim()) p.push("q=" + encodeURIComponent(state.q.trim()));
@@ -548,7 +564,7 @@
 
   function render() {
     var toks = tokens();
-    var tagCount = {}, locCount = {}, allTag = 0, allLoc = 0, kindCount = 0;
+    var tagCount = {}, locCount = {}, allTag = 0, allLoc = 0, kindCount = [0, 0];
     var top = [], rest = [];
     books.forEach(function (b) {
       var m = matchText(b, toks);
@@ -556,8 +572,8 @@
       if (!m) return;
       var okTag = !state.tag || b.g.indexOf(state.tag) > -1;
       var okLoc = !state.loc || b.l === state.loc;
-      var okKind = !state.kind || b.k;
-      if (okTag && okLoc && b.k) kindCount++;
+      var okKind = !state.kind || (state.kind === "1") === !!b.k;
+      if (okTag && okLoc) kindCount[b.k ? 1 : 0]++;
       if (!okKind) return;
       if (okLoc) { allTag++; b.g.forEach(function (t) { tagCount[t] = (tagCount[t] || 0) + 1; }); }
       if (okTag) { allLoc++; locCount[b.l] = (locCount[b.l] || 0) + 1; }
@@ -566,19 +582,22 @@
     shown = top.concat(rest);
 
     updateChips($("themeChips"), state.tag, tagCount, allTag);
-    var kc = $("themeChips").querySelector(".kind");
-    if (kc) {
-      kc.querySelector(".n").textContent = kindCount;
-      kc.setAttribute("aria-pressed", String(!!state.kind));
-      kc.classList.toggle("empty", !kindCount && !state.kind);
+    if (hasKind) {
+      Array.prototype.forEach.call($("kindTabs").children, function (t) {
+        var k = t.getAttribute("data-k");
+        t.querySelector(".n").textContent = k === "1" ? kindCount[1] : k === "0" ? kindCount[0] : kindCount[0] + kindCount[1];
+        t.setAttribute("aria-selected", String(k === state.kind));
+      });
     }
     updateChips($("placeChips"), state.loc, locCount, allLoc);
     shelfRects.forEach(function (r, i) { r.classList.toggle("off", !shelfOrder[i]._hit); });
 
-    var filtered = !!(state.tag || state.loc || state.kind || toks.length);
+    var filtered = !!(state.tag || state.loc || toks.length);
     $("statusText").innerHTML = filtered
       ? "<strong>" + shown.length + "</strong> 本　<button class=\"link\" id=\"reset\">看全部</button>"
       : "<strong>" + books.length + "</strong> 本";
+    $("subnote").hidden = !(hasKind && filtered);
+    if (hasKind && filtered) $("subnote").innerHTML = "<strong>" + shown.length + "</strong> 本符合筛选　<button class=\"link\" id=\"reset2\">清除筛选</button>";
     $("lucky").hidden = shown.length < 2;
     $("empty").hidden = shown.length > 0;
     $("searchBox").classList.toggle("has-text", !!state.q);
@@ -602,9 +621,7 @@
   }
 
   function buildChips(el, items, kind) {
-    var html = "";
-    if (kind === "tag" && hasKind) html += '<button class="chip kind" aria-pressed="false">民间出版物 <span class="n"></span></button><span class="rule" aria-hidden="true"></span>';
-    html += '<button class="chip" data-v="" aria-pressed="true">' + (kind === "tag" ? "全部主题" : "全部位置") + ' <span class="n"></span></button>';
+    var html = '<button class="chip" data-v="" aria-pressed="true">' + (kind === "tag" ? "全部主题" : "全部位置") + ' <span class="n"></span></button>';
     html += items.map(function (v) {
       var mark = kind === "tag"
         ? '<i class="dot" style="background:' + colorOf(v) + '"></i>'
@@ -615,7 +632,6 @@
     el.addEventListener("click", function (e) {
       var chip = e.target.closest(".chip");
       if (!chip) return;
-      if (chip.classList.contains("kind")) { state.kind = state.kind ? "" : "1"; render(); syncUrl(); backToTop(); return; }
       var v = chip.getAttribute("data-v");
       if (kind === "tag") state.tag = state.tag === v ? "" : v; else state.loc = state.loc === v ? "" : v;
       render(); syncUrl(); backToTop();
@@ -792,12 +808,19 @@
   $("q").addEventListener("keydown", function (e) { if (e.key === "Enter") this.blur(); });
   $("qClear").addEventListener("click", function () { state.q = ""; $("q").value = ""; render(); syncUrl(); $("q").focus(); });
   function resetAll() {
-    state.q = ""; state.tag = ""; state.loc = ""; state.kind = ""; $("q").value = "";
+    state.q = ""; state.tag = ""; state.loc = ""; $("q").value = "";
     render(); syncUrl(); backToTop();
     $("themeChips").scrollLeft = 0; $("placeChips").scrollLeft = 0;
   }
   $("statusText").addEventListener("click", function (e) { if (e.target.id === "reset") resetAll(); });
-  $("emptyReset").addEventListener("click", resetAll);
+  $("subnote").addEventListener("click", function (e) { if (e.target.id === "reset2") resetAll(); });
+  $("kindTabs").addEventListener("click", function (e) {
+    var t = e.target.closest("[data-k]");
+    if (!t) return;
+    state.kind = t.getAttribute("data-k");
+    render(); syncUrl(); backToTop();
+  });
+  $("emptyReset").addEventListener("click", function () { state.kind = ""; resetAll(); });
   $("lucky").addEventListener("click", function () {
     if (shown.length) openBook(shown[Math.floor(Math.random() * shown.length)].id, true);
   });
@@ -847,6 +870,8 @@
 
     if (data.updated) $("colophon").textContent = "更新于 " + data.updated;
     hasKind = books.some(function (b) { return b.k; });
+    $("kindTabs").hidden = !hasKind;
+    document.querySelector(".status").classList.toggle("has-tabs", hasKind);
     buildChips($("themeChips"), tags, "tag");
     buildChips($("placeChips"), places, "loc");
     buildShelf();

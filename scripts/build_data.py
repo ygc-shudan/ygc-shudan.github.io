@@ -9,9 +9,12 @@
   3. 都没有时，按下面 KEYWORDS 里的关键词从书名、作者、简介里猜
 
 网页上的默认顺序：scripts/featured.json 里点名的书在最前，其余按主题排。
+「备注」里写了「非正式出版物」的，网页上归入「民间出版物」，这几个字本身不显示。
+「待核对」等其他列不会出现在网页上。
 """
 
 import glob
+import hashlib
 import json
 import os
 import re
@@ -60,6 +63,8 @@ KEYWORDS = {
     "生活与工具书": ["词汇", "詞彙", "雅思", "gre", "vocabulary", "食谱", "便当", "便當", "养猫", "猫",
                "旅行", "地理", "百科", "手册"],
 }
+
+INFORMAL_MARK = "非正式出版物"
 
 BRACKETS = r"[\[\(（【〔［]\s*([一-鿿]{1,6})\s*[\]\)）】〕］]"
 
@@ -156,8 +161,16 @@ def main():
         if not title:
             continue
         isbn = re.sub(r"\.0$", "", row.get("ISBN", ""))
-        book_id = isbn if isbn and isbn not in seen_ids else f"r{n}"
+        if isbn and isbn not in seen_ids:
+            book_id = isbn
+        else:  # 没有 ISBN 的按书名生成编号，表格增删行也不会变
+            book_id = "z" + hashlib.sha1(title.encode("utf-8")).hexdigest()[:8]
+            while book_id in seen_ids:
+                book_id += "x"
         seen_ids.add(book_id)
+        note = row.get("备注", "")
+        informal = INFORMAL_MARK in note
+        note = re.sub(r"[；;，,、\s]*" + INFORMAL_MARK + r"[；;，,、\s]*", " ", note).strip()
 
         author = clean_author(row.get("作者"))
         book_desc = clean_long(row.get("图书简介"))
@@ -175,9 +188,16 @@ def main():
             book["a"] = author
         if row.get("出版社"):
             book["p"] = row["出版社"]
-        for key, col in (("lent", "借给"), ("status", "阅读状态"), ("note", "备注")):
+        year = re.sub(r"\s.*$", "", row.get("出版时间", ""))  # 去掉 Excel 日期里的时分秒
+        if year:
+            book["y"] = year
+        if informal:
+            book["k"] = 1
+        for key, col in (("lent", "借给"), ("status", "阅读状态")):
             if row.get(col):
                 book[key] = row[col]
+        if note:
+            book["note"] = note
         books.append(book)
         if book_desc or author_desc:
             details[book_id] = [book_desc, author_desc]
@@ -187,13 +207,19 @@ def main():
     featured = []
     if os.path.exists(FEATURED_PATH):
         with open(FEATURED_PATH, encoding="utf-8") as f:
-            featured = [str(x.get("ISBN", "")).strip() for x in json.load(f)]
-    front = {isbn: i for i, isbn in enumerate(featured)}
+            featured = json.load(f)
+    front_isbn, front_title = {}, {}
+    for i, x in enumerate(featured):
+        if str(x.get("ISBN", "")).strip():
+            front_isbn[str(x["ISBN"]).strip()] = i
+        elif x.get("书名"):
+            front_title[clean_title(x["书名"])] = i
 
     def rank(item):
         n, book = item
-        if book["id"] in front:
-            return (0, front[book["id"]], n)
+        pos = front_isbn.get(book["id"], front_title.get(book["t"]))
+        if pos is not None:
+            return (0, pos, n)
         first = book["g"][0] if book["g"] else None
         theme = TAG_ORDER.index(first) if first in TAG_ORDER else len(TAG_ORDER)
         return (1, theme, n)
